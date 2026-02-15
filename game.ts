@@ -11,7 +11,7 @@ const SHIP_FRICTION = 0.99;
 const SHIP_TURN_SPEED = 0.07;
 const BULLET_SPEED = 7;
 const BULLET_LIFETIME = 55;
-const MAX_BULLETS = 8;
+const MAX_BULLETS = 4;
 const ASTEROID_SPEED_MIN = 0.4;
 const ASTEROID_SPEED_MAX = 1.8;
 const ASTEROID_SIZES = [40, 20, 10] as const;
@@ -405,7 +405,7 @@ function update(s: GameState): void {
       },
       life: BULLET_LIFETIME,
     });
-    shootCooldown = 8;
+    shootCooldown = 18;
   }
 
   // Update bullets
