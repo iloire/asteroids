@@ -21,6 +21,8 @@ const INVINCIBLE_FRAMES = 120;
 const PARTICLE_COUNT = 8;
 const PARTICLE_LIFETIME = 30;
 const STAR_COUNT = 120;
+const HYPERSPACE_COOLDOWN = 60;
+const HYPERSPACE_BLINK_FRAMES = 15;
 
 // Colors — phosphor green CRT aesthetic
 const CLR_SHIP = "#00ff88";
@@ -45,6 +47,7 @@ interface Ship {
   angle: number;
   thrusting: boolean;
   invincible: number;
+  hyperspace: number;
 }
 
 interface Bullet {
@@ -99,6 +102,7 @@ interface Keys {
   right: boolean;
   up: boolean;
   shoot: boolean;
+  hyperspace: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +170,7 @@ function createShip(): Ship {
     angle: -Math.PI / 2,
     thrusting: false,
     invincible: INVINCIBLE_FRAMES,
+    hyperspace: 0,
   };
 }
 
@@ -203,8 +208,9 @@ canvas.width = WIDTH;
 canvas.height = HEIGHT;
 const ctx = canvas.getContext("2d")!;
 
-const keys: Keys = { left: false, right: false, up: false, shoot: false };
+const keys: Keys = { left: false, right: false, up: false, shoot: false, hyperspace: false };
 let shootCooldown = 0;
+let hyperspaceCooldown = 0;
 
 function loadHiScore(): number {
   try {
@@ -261,6 +267,12 @@ window.addEventListener("keydown", (e) => {
     case "KeyF":
       keys.shoot = true;
       break;
+    case "ArrowDown":
+    case "KeyS":
+    case "ShiftLeft":
+    case "ShiftRight":
+      keys.hyperspace = true;
+      break;
     case "KeyP":
       if (state.started && !state.gameOver) state.paused = !state.paused;
       break;
@@ -273,7 +285,7 @@ window.addEventListener("keydown", (e) => {
       }
       break;
   }
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "ShiftLeft", "ShiftRight"].includes(e.code)) {
     e.preventDefault();
   }
 });
@@ -295,6 +307,12 @@ window.addEventListener("keyup", (e) => {
     case "Space":
     case "KeyF":
       keys.shoot = false;
+      break;
+    case "ArrowDown":
+    case "KeyS":
+    case "ShiftLeft":
+    case "ShiftRight":
+      keys.hyperspace = false;
       break;
   }
 });
@@ -328,6 +346,50 @@ function update(s: GameState): void {
 
   // Invincibility countdown
   if (s.ship.invincible > 0) s.ship.invincible--;
+
+  // Hyperspace
+  if (hyperspaceCooldown > 0) hyperspaceCooldown--;
+  if (s.ship.hyperspace > 0) s.ship.hyperspace--;
+  if (keys.hyperspace && hyperspaceCooldown === 0 && s.ship.hyperspace === 0) {
+    keys.hyperspace = false; // consume the press
+    const oldX = s.ship.pos.x;
+    const oldY = s.ship.pos.y;
+
+    // Teleport to random position away from asteroids
+    let tries = 0;
+    do {
+      s.ship.pos.x = Math.random() * WIDTH;
+      s.ship.pos.y = Math.random() * HEIGHT;
+      tries++;
+    } while (
+      tries < 50 &&
+      s.asteroids.some((a) => dist(s.ship.pos, a.pos) < a.radius + 80)
+    );
+
+    s.ship.vel.x = 0;
+    s.ship.vel.y = 0;
+    s.ship.angle = Math.random() * Math.PI * 2;
+    s.ship.hyperspace = HYPERSPACE_BLINK_FRAMES;
+    hyperspaceCooldown = HYPERSPACE_COOLDOWN;
+
+    // Vanish particles at old position
+    s.particles.push(...spawnParticles(oldX, oldY, 12, 3));
+
+    // ~15% chance of catastrophic re-entry failure
+    if (Math.random() < 0.15) {
+      s.lives--;
+      s.particles.push(...spawnParticles(s.ship.pos.x, s.ship.pos.y, 20, 3));
+      if (s.lives <= 0) {
+        s.gameOver = true;
+        if (s.score > s.hiScore) {
+          s.hiScore = s.score;
+          saveHiScore(s.score);
+        }
+      } else {
+        s.ship = createShip();
+      }
+    }
+  }
 
   // Shooting
   if (shootCooldown > 0) shootCooldown--;
@@ -395,7 +457,7 @@ function update(s: GameState): void {
   s.asteroids.push(...newAsteroids);
 
   // Ship–asteroid collision
-  if (s.ship.invincible <= 0) {
+  if (s.ship.invincible <= 0 && s.ship.hyperspace <= 0) {
     for (const a of s.asteroids) {
       if (dist(s.ship.pos, a.pos) < a.radius + SHIP_SIZE * 0.6) {
         s.lives--;
@@ -437,6 +499,7 @@ function update(s: GameState): void {
 // ---------------------------------------------------------------------------
 function drawShip(s: GameState): void {
   const { ship, frame } = s;
+  if (ship.hyperspace > 0) return;
   const blinking = ship.invincible > 0 && Math.floor(frame / 6) % 2 === 0;
   if (blinking) return;
 
@@ -585,19 +648,20 @@ function drawTitleScreen(s: GameState): void {
   ctx.font = "16px 'Share Tech Mono', monospace";
   ctx.fillStyle = CLR_DIM;
   ctx.fillText("ARROWS / WASD  to move", WIDTH / 2, HEIGHT / 2 + 10);
-  ctx.fillText("SPACE  to shoot    P  to pause", WIDTH / 2, HEIGHT / 2 + 35);
+  ctx.fillText("SPACE  to shoot    SHIFT  hyperspace", WIDTH / 2, HEIGHT / 2 + 35);
+  ctx.fillText("P  to pause", WIDTH / 2, HEIGHT / 2 + 60);
 
   const blink = Math.sin(s.frame * 0.06) > 0;
   if (blink) {
     ctx.fillStyle = CLR_TEXT;
     ctx.font = "20px 'Share Tech Mono', monospace";
-    ctx.fillText("PRESS ENTER TO START", WIDTH / 2, HEIGHT / 2 + 90);
+    ctx.fillText("PRESS ENTER TO START", WIDTH / 2, HEIGHT / 2 + 115);
   }
 
   if (s.hiScore > 0) {
     ctx.fillStyle = CLR_DIM;
     ctx.font = "14px 'Share Tech Mono', monospace";
-    ctx.fillText(`HIGH SCORE  ${s.hiScore}`, WIDTH / 2, HEIGHT / 2 + 140);
+    ctx.fillText(`HIGH SCORE  ${s.hiScore}`, WIDTH / 2, HEIGHT / 2 + 160);
   }
 }
 
