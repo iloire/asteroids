@@ -648,20 +648,21 @@ function drawTitleScreen(s: GameState): void {
   ctx.font = "16px 'Share Tech Mono', monospace";
   ctx.fillStyle = CLR_DIM;
   ctx.fillText("ARROWS / WASD  to move", WIDTH / 2, HEIGHT / 2 + 10);
-  ctx.fillText("SPACE  to shoot    SHIFT  hyperspace", WIDTH / 2, HEIGHT / 2 + 35);
-  ctx.fillText("P  to pause", WIDTH / 2, HEIGHT / 2 + 60);
+  ctx.fillText("SPACE  to shoot", WIDTH / 2, HEIGHT / 2 + 35);
+  ctx.fillText("SHIFT / S / DOWN  hyperspace", WIDTH / 2, HEIGHT / 2 + 60);
+  ctx.fillText("P  to pause", WIDTH / 2, HEIGHT / 2 + 85);
 
   const blink = Math.sin(s.frame * 0.06) > 0;
   if (blink) {
     ctx.fillStyle = CLR_TEXT;
     ctx.font = "20px 'Share Tech Mono', monospace";
-    ctx.fillText("PRESS ENTER TO START", WIDTH / 2, HEIGHT / 2 + 115);
+    ctx.fillText("PRESS ENTER TO START", WIDTH / 2, HEIGHT / 2 + 140);
   }
 
   if (s.hiScore > 0) {
     ctx.fillStyle = CLR_DIM;
     ctx.font = "14px 'Share Tech Mono', monospace";
-    ctx.fillText(`HIGH SCORE  ${s.hiScore}`, WIDTH / 2, HEIGHT / 2 + 160);
+    ctx.fillText(`HIGH SCORE  ${s.hiScore}`, WIDTH / 2, HEIGHT / 2 + 185);
   }
 }
 
