@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && cp index.html dist/index.html",
+    "build": "tsc && sed 's|dist/game.js|game.js|' index.html > dist/index.html",
     "dev": "tsc --watch & npx serve . -l 3000"
   },
   "keywords": [],
