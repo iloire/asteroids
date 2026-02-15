@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && cp dist/game.js game.js",
+    "build": "tsc && cp index.html dist/index.html",
     "dev": "tsc --watch"
   },
   "keywords": [],
