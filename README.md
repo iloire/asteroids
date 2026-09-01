@@ -8,7 +8,7 @@ Phosphor-green CRT aesthetic with glow effects, particle explosions, and a twink
 
 ## Play
 
-**[Play it live →](https://asteroids-alpha-five.vercel.app/)**
+**[Play it live →](https://iloire.github.io/asteroids/)**  ·  [mirror on Vercel](https://asteroids-alpha-five.vercel.app/)
 
 Or open `index.html` in your browser.
 
