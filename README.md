@@ -4,9 +4,15 @@ A classic arcade Asteroids game built with HTML5 Canvas and TypeScript.
 
 Phosphor-green CRT aesthetic with glow effects, particle explosions, and a twinkling star field.
 
+![Gameplay](screenshots/gameplay.png)
+
 ## Play
 
-Open `index.html` in your browser.
+**[Play it live →](https://asteroids-alpha-five.vercel.app/)**
+
+Or open `index.html` in your browser.
+
+![Title screen](screenshots/title.png)
 
 ## Controls
 
